@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from pysmartthings import SmartThings
 
@@ -13,5 +13,5 @@ class DeviceConfig:
 
 @dataclass
 class SoundbarConfig:
-    api: SmartThings
-    devices: dict
+    client: SmartThings
+    devices: dict = field(default_factory=dict)

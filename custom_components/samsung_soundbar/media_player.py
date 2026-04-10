@@ -2,7 +2,7 @@ import logging
 from typing import Any, Mapping
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_SPEAKER,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
@@ -148,7 +148,7 @@ class SmartThingsSoundbarMediaPlayer(MediaPlayerEntity):
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_SPEAKER
+        return MediaPlayerDeviceClass.SPEAKER
 
     @property
     def supported_features(self):

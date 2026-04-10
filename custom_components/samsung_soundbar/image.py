@@ -31,7 +31,7 @@ class SoundbarImageEntity(ImageEntity):
         self, device: SoundbarDevice, append_unique_id: str, hass: HomeAssistant
     ):
         super().__init__(hass)
-        self.entity_id = f"image.{device.device_name}_{append_unique_id}"
+        self.entity_id = f"image.{device.device_name.lower().replace(' ', '_')}_{append_unique_id}"
 
         self.__device = device
         self._attr_unique_id = f"{device.device_id}_sw_{append_unique_id}"

@@ -29,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class VolumeSensor(SensorEntity):
     def __init__(self, device: SoundbarDevice, append_unique_id: str, icon_string: str):
-        self.entity_id = f"sensor.{device.device_name}_{append_unique_id}"
+        self.entity_id = f"sensor.{device.device_name.lower().replace(' ', '_')}_{append_unique_id}"
         self.__device = device
         self._attr_unique_id = f"{device.device_id}_sw_{append_unique_id}"
         self.__base_icon = icon_string
@@ -53,4 +53,4 @@ class VolumeSensor(SensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self._attr_native_value = self.__device.device.status.volume
+        self._attr_native_value = self.__device.raw_volume

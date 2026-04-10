@@ -67,7 +67,8 @@ class SoundbarSwitchAdvancedAudio(SwitchEntity):
         off_function,
         icon_string: str = "mdi:toggle-switch-variant",
     ):
-        self.entity_id = f"switch.{device.device_name}_{append_unique_id}"
+        slugified_name = device.device_name.lower().replace(" ", "_")
+        self.entity_id = f"switch.{slugified_name}_{append_unique_id}"
 
         self.__device = device
         self._name = f"{self.__device.device_name} {append_unique_id}"
@@ -82,7 +83,7 @@ class SoundbarSwitchAdvancedAudio(SwitchEntity):
         )
 
         self.__state_function = state_function
-        self.__state = False
+        self.__state = None
         self.__on_function = on_function
         self.__off_function = off_function
 
@@ -92,7 +93,7 @@ class SoundbarSwitchAdvancedAudio(SwitchEntity):
     def name(self):
         return self._name
 
-    def update(self):
+    async def update(self):
         self.__state = self.__state_function()
 
     @property
@@ -102,12 +103,14 @@ class SoundbarSwitchAdvancedAudio(SwitchEntity):
     # ------ STATE FUNCTIONS --------
     @property
     def state(self):
+        if self.__state is None:
+            return None
         return "on" if self.__state else "off"
 
     async def async_turn_off(self):
         await self.__off_function(False)
-        self.__state = "off"
+        self.__state = False
 
     async def async_turn_on(self):
         await self.__on_function(True)
-        self.__state = "on"
+        self.__state = True

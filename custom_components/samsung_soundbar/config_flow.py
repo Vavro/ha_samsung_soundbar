@@ -1,11 +1,10 @@
 import logging
 from typing import Any
 
-import pysmartthings
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from pysmartthings import APIResponseError
+from pysmartthings import SmartThings
 from voluptuous import All, Range
 
 from .const import (
@@ -17,18 +16,23 @@ from .const import (
     CONF_ENTRY_SETTINGS_EQ_SELECTOR,
     CONF_ENTRY_SETTINGS_SOUNDMODE_SELECTOR,
     CONF_ENTRY_SETTINGS_WOOFER_NUMBER,
+    CONF_DEFAULT_BASS_MODE,
+    CONF_DEFAULT_NIGHT_MODE,
+    CONF_DEFAULT_VOICE_AMPLIFIER,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(api, device_id: str):
+async def validate_input(session, api_token: str, device_id: str):
+    """Validate the API token and device ID via pysmartthings."""
     try:
-        return await api.device(device_id)
-    except APIResponseError as excp:
+        client = SmartThings(_token=api_token, session=session)
+        return await client.get_raw_device(device_id)
+    except Exception as excp:
         _LOGGER.error("[Samsung Soundbar] ERROR: %s", str(excp))
-        raise ValueError
+        raise ValueError(str(excp))
 
 
 class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,11 +61,10 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 session = async_get_clientsession(self.hass)
-                api = pysmartthings.SmartThings(
-                    session, self.user_input.get(CONF_ENTRY_API_KEY)
-                )
-                device = await validate_input(
-                    api, self.user_input.get(CONF_ENTRY_DEVICE_ID)
+                await validate_input(
+                    session,
+                    self.user_input.get(CONF_ENTRY_API_KEY),
+                    self.user_input.get(CONF_ENTRY_DEVICE_ID),
                 )
                 _LOGGER.debug(
                     f"Successfully validated Input, Creating entry with title {DOMAIN} and data {user_input}"
@@ -79,6 +82,9 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ENTRY_SETTINGS_EQ_SELECTOR): bool,
                     vol.Required(CONF_ENTRY_SETTINGS_SOUNDMODE_SELECTOR): bool,
                     vol.Required(CONF_ENTRY_SETTINGS_WOOFER_NUMBER): bool,
+                    vol.Optional(CONF_DEFAULT_BASS_MODE, default=True): bool,
+                    vol.Optional(CONF_DEFAULT_NIGHT_MODE, default=False): bool,
+                    vol.Optional(CONF_DEFAULT_VOICE_AMPLIFIER, default=False): bool,
                 }
             ),
         )
@@ -131,6 +137,18 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         default=self.config_entry.data.get(
                             CONF_ENTRY_SETTINGS_WOOFER_NUMBER
                         ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_DEFAULT_BASS_MODE,
+                        default=self.config_entry.data.get(CONF_DEFAULT_BASS_MODE, True),
+                    ): bool,
+                    vol.Optional(
+                        CONF_DEFAULT_NIGHT_MODE,
+                        default=self.config_entry.data.get(CONF_DEFAULT_NIGHT_MODE, False),
+                    ): bool,
+                    vol.Optional(
+                        CONF_DEFAULT_VOICE_AMPLIFIER,
+                        default=self.config_entry.data.get(CONF_DEFAULT_VOICE_AMPLIFIER, False),
                     ): bool,
                     vol.Required(CONF_ENTRY_MAX_VOLUME, default=100): All(
                         int, Range(min=1, max=100)
